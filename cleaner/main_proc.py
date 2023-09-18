@@ -6,6 +6,7 @@ insulin doses and carbohydrate consumption into a complete dataset.
 import os
 import re 
 import pickle
+import json
 import pandas as pd
 import numpy as np
 from collections import Counter
@@ -13,6 +14,15 @@ import multiprocessing as mp
 from functools import partial
 
 from cleaner.demographic import *
+from cleaner.quant_proc import *
+from cleaner.qual_proc import *
+
+# overcome loading pd error of certain type
+# Value error too small when loading Json
+pd.io.json._json.loads = lambda s, *a, **kw: json.loads(s)
+
+# stop memory error relating to multiprocessing
+mp.set_start_method('spawn', force=True)
 
 
 def extract_user_files(full_path):
@@ -21,7 +31,7 @@ def extract_user_files(full_path):
     each core file types: devicestatus, entries, profile, treatments
     """
     
-    # list all files in folder and trim to distinct type
+    # list all files in folder and trim to distinct name format
     full_filenames = [f for f in os.listdir(full_path) if os.path.isfile(os.path.join(full_path, f))]  
     filenames = [re.split('_|\.', f)[0] for f in full_filenames]
             
@@ -29,7 +39,7 @@ def extract_user_files(full_path):
     file_keys = list(Counter(filenames).keys()) 
     file_count = list(Counter(filenames).values()) 
 
-    # group files by type
+    # group files by one of four categories
     all_files = {"devicestatus":[], "entries":[], "profile":[], "treatments":[]}
     file_count = [c for _, c in sorted(zip(file_keys, file_count))]
     full_filenames.sort()
@@ -53,116 +63,55 @@ def extract_user_files(full_path):
     return entries, treatments, profile, devicestatus
 
 
-"""
-Convert the raw OpenAPS json files of a single participant 
-to a complete dataframe.
-"""
-def json_to_dataframe(pt_name, dataset_path, debug=0):
-        
-    # remove cap on number of columns and hide warning message
-    pd.set_option('display.max_rows', 10_000, 'display.max_columns', None)
+def summarise_patient(bg, bolus, pt_name):
+    """Briefly summarise key patient information"""
+    
+    num_days = (len(bg) * 5) / (60 * 24)
+    meal_num = len(bolus[bolus["carbs"] > 0])
+
+    print('\nSummary of Patient --------')
+    print("Patient ID: {}".format(pt_name))
+    print(" - {} days of data".format(round(num_days, 2)))
+    print(" - {} meals occured".format(meal_num))
+    print(" - Mean {} meals per day".format(round(meal_num/num_days), 2))
+    print('----------------------------\n')
+
+
+def json_to_dataframe(pt_name, dataset_path):
+    """
+    Open the indiviudal device logs:
+    - entries -> Glucose Monitor
+    - treatments -> Insulin Pump
+    - profile -> NightScout Information
+
+    Convert into standardised form and collate 
+    into a single dataframe.
+    """
+
+    # hide warning relating to chained assignment
     pd.set_option('mode.chained_assignment', None)   
     
-    # get all files in selected folder
+    # extract individual logs from user files
     full_path = dataset_path + pt_name + '/direct-sharing-31/'
-    entries, treatments, profile, devicestatus = extract_user_files(full_path)
-        
-    # process the entries -----------------------------------------------------
-          
-    bg = convert_entries(entries)
-            
-    if debug > 2: 
-        print('\nEntries columns: -------------------')
-        print(list(entries.columns))
-        
-    # process the profile ------------------------------------------------------
-    
-    prof = convert_profile(profile, treatments)
-    
-    if debug > 2: 
-        print('\nProfile columns: -------------------')
-        print(list(profile.columns)) 
-        print(prof["basal"].values)
-    
-    # process the treatments ---------------------------------------------------
-                
-    basal, bolus = convert_treatments(treatments, prof)
-    
-    if debug > 2:
-        print('\nTreatments columns: -------------------')
-        print(list(treatments.columns))    
-        print(treatments["eventType"].value_counts())
-        if 'notes' in treatments.columns:
-            print(treatments["notes"].value_counts())
-        print('----------------------------------------')
-            
-    if debug > 1:
-        print('\nSummary of Patient ------------------')
-        print(" - {} days of data".format(round((len(bg) * 5) / (60 * 24), 2)))
-        print(" - {} meals occured".format(len(bolus[bolus["carbs"] > 0])))
-        print(" - Mean {} meals per day".format(round(len(bolus[bolus["carbs"] > 0])/((len(bg) * 5)/(60 * 24)), 2)))
-        print('--------------------------------------\n')
-    
-    # merge the data ---------------------------------------------------------
-        
+    entries, treatments, profile, _ = extract_user_files(full_path)
+
+    # process log data 
+    bg = convert_entries(entries)                         # blood glucose 
+    prof = convert_profile(profile, treatments)           # background basal information
+    basal, bolus = convert_treatments(treatments, prof)   # basal, bolus and carbohydrates
+
+    # merge into single dataframe with samples at 5-min intervals     
     final_dataframe = merge_data_streams(
-        bg, basal, bolus, prof, debug=debug
-    )
-    
-    if debug > 1:
-        # display action distribution
-        print(f'\nmean action {np.mean(final_dataframe["basal"].values)}')
-        print(f'median action {np.median(final_dataframe["basal"].values)}\n')
-        plt.hist(final_dataframe["basal"].values, bins=100)
-        plt.show()
-        
-        # display the nans in each column
-        print('\nNaNs per column: -----------------')
-        print(final_dataframe.isnull().sum()) 
-        print('--------------------image.png----------------')
-        
-    # save all the event alerts and their times
+        bg, basal, bolus, prof)
+
+    # convert self-reported notes into binary tags
+    # e.g. high fat, high protein, exercise, etc.
     event_msgs = process_event_msgs(treatments)
+
+    # display the patient info
+    summarise_patient(bg, bolus, pt_name)
             
     return final_dataframe, event_msgs
-
-
-
-def multi_js_to_df(pt_id, dataset_path, demographic_file):
-    """
-    Convert the raw individual patient device log JSON 
-    file into a dataframe.
-    """
-
-    #################################
-    # TODO: want to remove debugging
-    #################################
-
-    # convert JSON file to dataframe
-    final_df, event_msgs = json_to_dataframe(
-        pt_id, dataset_path=dataset_path, debug=1) 
-
-    # add demographic information
-
-
-    # add additional columns
-    final_df["PtID"] = pt_data[0]
-    final_df["weight"] = pt_data[1] 
-    final_df["height"] = pt_data[2]
-    final_df["age"] = pt_data[3]
-    final_df["gender"] = pt_data[4]
-    final_df["daily_carbs"] = pt_data[5]
-
-
-    event_msgs["PtID"] = pt_data[0]
-        
-    # update the run counter
-    with _counter_collect.get_lock():
-        _counter_collect.value += 1
-        num_pts = len(demographic_file)
-        print(f'{_counter_collect.value}/{num_pts} - Completed: {pt_id}')
-    
-    return (final_df, event_msgs)
 
 
 def init_globals_clean(counter):
@@ -171,6 +120,33 @@ def init_globals_clean(counter):
     """
     global _counter_collect
     _counter_collect = counter 
+
+
+def multi_js_to_df(pt_id, dataset_path, demographic_file):
+    """
+    Convert the raw individual patient device log JSON 
+    file into a dataframe.
+    """
+
+    # convert JSON file to dataframe 
+    # final_df -> diabetes metrics
+    # events_msgs -> qualitative event labels
+    final_df, event_msgs = json_to_dataframe(
+        pt_id, dataset_path=dataset_path) 
+
+    # add demographic information to dataframe
+    pt_demo = demographic_file.loc[demographic_file["PtID"] == pt_id]
+    for col in list(pt_demo.columns):
+        final_df[col] = pt_demo.iloc[0][col]
+    event_msgs["PtID"] = pt_id
+        
+    # update the run counter
+    num_pts = len(demographic_file)
+    with _counter_collect.get_lock():
+        _counter_collect.value += 1
+        print(f'{_counter_collect.value}/{num_pts} - Completed: {pt_id}')
+    
+    return (final_df, event_msgs)
 
 
 def collect_cohort(
@@ -225,8 +201,12 @@ def collect_cohort(
 if __name__ == "__main__":
     
     DEMO_PATH = './datasets/OpenAPS_Demographic.xlsx'
-    DATA_PATH = './datasets/Raw_data'
+    DATA_PATH = './datasets/Raw_data/'
+    SAVE_PATH = './datasets/Processed_data/test_data'
+    TEST_PT = "22961398"
+
     collect_cohort(
         dataset_path=DATA_PATH,
-        demographic_path=DEMO_PATH
+        demographic_path=DEMO_PATH,
+        save_path=SAVE_PATH
     )
