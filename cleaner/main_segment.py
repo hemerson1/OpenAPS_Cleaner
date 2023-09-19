@@ -3,7 +3,6 @@ Convert the processed dataset into continuous segments for
 use in machine learning prediction.
 '''
 import os
-import ast
 import pickle
 import argparse
 import pandas as pd

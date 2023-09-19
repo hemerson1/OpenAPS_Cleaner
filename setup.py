@@ -7,11 +7,12 @@ VERSION = '0.1.0'
 DESCRIPTION = 'Converts OpenAPS device logs into time-series analysis compatible form.'
 AUTHOR = 'Harry Emerson'
 EMAIL = 'harry.emerson@bristol.ac.uk'
-URL = 'https://github.com/yourusername/OpenAPS_Cleaner'
+URL = 'https://github.com/hemerson1/OpenAPS_Cleaner'
 
 # Specify package dependencies
 INSTALL_REQUIRES = [
-    # List your dependencies here, e.g., 'numpy>=1.0.0'
+    'numpy==1.23.0',
+    'pandas==1.4.3'
 ]
 
 # Define long description (usually from a README file)

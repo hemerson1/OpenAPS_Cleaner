@@ -9,7 +9,6 @@ import pickle
 import json
 import argparse
 import pandas as pd
-import numpy as np
 from collections import Counter
 import multiprocessing as mp
 from functools import partial

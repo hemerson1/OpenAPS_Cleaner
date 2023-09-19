@@ -1,5 +1,7 @@
 # OpenAPS -> do not log the dataset file
-datasets/ 
+Processed_data/
+Raw_data/
+OpenAPS_Demographic.xlsx 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
