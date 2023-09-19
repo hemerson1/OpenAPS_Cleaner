@@ -3,7 +3,9 @@ Convert the processed dataset into continuous segments for
 use in machine learning prediction.
 '''
 import os
+import ast
 import pickle
+import argparse
 import pandas as pd
 from functools import partial
 import multiprocessing as mp
@@ -11,6 +13,7 @@ import multiprocessing as mp
 from cleaner.helper import *
 from cleaner.feature_rep import * 
 from cleaner.demographic import *
+from config import def_segment
 
 
 def blood_glucose_interpolate(dataframe):
@@ -158,6 +161,15 @@ def get_participant_traj(pt_name, dataset, data_events=None, params={}):
 
     # remove chained assignment warning
     pd.set_option('mode.chained_assignment', None)  
+
+    # ensure the correct parameters are included
+    req_params = [
+        "traj_len", "time_diff_thresh", "augment_options", 
+        "filter_options", "sensor_options", "reward_type", 
+        "state_type"
+    ]
+    err_msg = f'Please ensure all the parameters are included: {req_params}'
+    assert set(req_params) == (set(req_params) & set(params.keys())), err_msg
     
     # set the parameters and seed information
     set_seed(seed=params.get("seed", 0))
@@ -169,10 +181,6 @@ def get_participant_traj(pt_name, dataset, data_events=None, params={}):
     pt_dataset = dataset.loc[dataset["PtID"] == pt_name]  
 
     # Supplement the dataset -------------------------------------------
-
-    #######################################
-    # TODO: what about when not in params?
-    #######################################
 
     # modify the dataset 
     # (i.e. interpolate blood glucose, relabel carbohydrates)
@@ -434,30 +442,26 @@ def break_trajectories(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_path", type=str, help="location of the raw data file folder")
+    parser.add_argument("--save_path", type=str, help="location and name of save file")
+    parser.add_argument("--demo_path", type=str, help="location of the demographic file")
+    parser.add_argument("--params", type=str, help="parameters for segmentation")
+    parser.add_argument("--num_jobs", type=int, default=8, help="number of threads for multiprocessing")
+    args = parser.parse_args()
 
-    DEMO_PATH = './datasets/OpenAPS_Demographic.xlsx'
-    DATA_PATH = './datasets/Processed_data/test_data'
-    SAVE_PATH = './datasets/Processed_data/test_segments'
-    TEST_PT = "22961398"
+    # load in  the default parameters
+    config = parse_config(def_segment)
+    args = {k: v for k, v in vars(args).items() if v is not None}
+    config.update(args)
     
+    # process raw data files
     break_trajectories(
-        dataset_path=DATA_PATH,
-        demographic_path=DEMO_PATH,
-        save_path=SAVE_PATH,
+        dataset_path=config["dataset_path"],
+        demographic_path=config["demo_path"],
+        save_path=config["save_path"],
+        pt_file_path=config["pt_path"],
+        num_jobs=config["num_jobs"],
+        params=config["params"]
 
-        params={
-
-            # state representation
-            "state_type": "default",
-            "reward_type": "magni",
-            
-            # processing
-            "traj_len": 8, # hrs
-            "time_diff_thresh": 30, # mins
-
-            # augmentation
-            "augment_options": [],
-            "filter_options": [],
-            "sensor_options": []
-        }
     )

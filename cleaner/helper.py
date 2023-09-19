@@ -4,6 +4,7 @@ Re-usable functions for dataset pre-processing.
 
 import random
 import numpy as np
+from collections import OrderedDict
 
 
 def set_seed(seed=0):
@@ -98,5 +99,14 @@ def modify_date(row):
         
     return new_row
 
+def parse_config(cfg_module):
+    '''Convert configuratio file to dictionary.'''
+
+    args = [ i for i in dir(cfg_module) if not i.startswith("__")]
+    config = OrderedDict()
+    for arg in args:
+        config[arg] = getattr(cfg_module, arg)
+    
+    return config
 
 

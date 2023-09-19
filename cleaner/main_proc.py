@@ -7,6 +7,7 @@ import os
 import re 
 import pickle
 import json
+import argparse
 import pandas as pd
 import numpy as np
 from collections import Counter
@@ -16,6 +17,7 @@ from functools import partial
 from cleaner.demographic import *
 from cleaner.quant_proc import *
 from cleaner.qual_proc import *
+from config import def_proc
 
 # overcome loading pd error of certain type
 # Value error too small when loading Json
@@ -32,7 +34,8 @@ def extract_user_files(full_path):
     """
     
     # list all files in folder and trim to distinct name format
-    full_filenames = [f for f in os.listdir(full_path) if os.path.isfile(os.path.join(full_path, f))]  
+    full_filenames = [f for f in os.listdir(full_path) if os.path.isfile(os.path.join(full_path, f))]
+    full_filenames = [f for f in full_filenames if f.endswith(".json")]
     filenames = [re.split('_|\.', f)[0] for f in full_filenames]
             
     # get file name and number if there are multiple files
@@ -199,14 +202,24 @@ def collect_cohort(
 
 
 if __name__ == "__main__":
-    
-    DEMO_PATH = './datasets/OpenAPS_Demographic.xlsx'
-    DATA_PATH = './datasets/Raw_data/'
-    SAVE_PATH = './datasets/Processed_data/test_data'
-    TEST_PT = "22961398"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_path", type=str, help="location of the raw data file folder")
+    parser.add_argument("--save_path", type=str, help="location and name of save file")
+    parser.add_argument("--demo_path", type=str, help="location of the demographic file")
+    parser.add_argument("--pt_path", type=int, default=None, help="location and name of participant file")
+    parser.add_argument("--num_jobs", type=int, default=8, help="number of threads for multiprocessing")
+    args = parser.parse_args()
 
+    # load in  the default parameters
+    config = parse_config(def_proc)
+    args = {k: v for k, v in vars(args).items() if v is not None}
+    config.update(args)
+    
+    # process raw data files
     collect_cohort(
-        dataset_path=DATA_PATH,
-        demographic_path=DEMO_PATH,
-        save_path=SAVE_PATH
+        dataset_path=config["dataset_path"],
+        save_path=config["save_path"],
+        demographic_path=config["demo_path"],
+        pt_file_path=config["pt_path"],
+        num_jobs=config["num_jobs"]
     )
