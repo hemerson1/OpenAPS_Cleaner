@@ -86,9 +86,8 @@ def view_proc_data(path, pt_name=None, window_hours=24, event_msgs=False):
     print('Bolus Events: {}'.format(all_boluses[:, 4]))    
     print('###################################')    
 
-    fig = plt.figure(figsize=(5, 6))
+    fig = plt.figure(figsize=(5, 6), facecolor=(1, 1, 1))
     gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1]) 
-    plt.tight_layout()
 
     # visualise the blood measurements
     print(f'\nBlood glucose over a {window_hours}-hour period:')
@@ -143,5 +142,7 @@ def view_proc_data(path, pt_name=None, window_hours=24, event_msgs=False):
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.subplots_adjust(hspace=.0)
     plt.xlabel("Time-of-day")
+    plt.tight_layout()
     plt.show()
-    # plt.savefig('Example_2.png', bbox_inches='tight')
+    
+    # plt.savefig('Example_2.png')
