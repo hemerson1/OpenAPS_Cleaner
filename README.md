@@ -5,7 +5,7 @@ OpenAPS Data Cleaner is a Python package for extracting log data from the OpenAP
 <table>
   <tr>
     <td><img src="./images/Example_1.png" alt="Example blood glucose trajectory 1"></td>
-    <td><img src="./images/Example_3.png" alt="Example blood glucose trajectory 2"></td>
+    <td><img src="./images/Example_2.png" alt="Example blood glucose trajectory 2"></td>
   </tr>
 </table>
 
@@ -32,7 +32,7 @@ The code in this repository provides a complete workflow for extracting relevant
 Here is a detailed list of the dataset features
 
 - :hourglass: Over 18 combined years of diabetes data.
-- :drop_of_blood: Full blood glucose, carbohydrate and insulin information, including background basal insulin and combination boluses.
+- :drop_of_blood: Full glucose, carbohydrate and insulin information, including background basal insulin and combination boluses.
 - :runner: Binary labels of physical activity, fatty meals, high protein meals, alcohol and caffeine.
 - :white_haired_man: Participant demographic information, such as weight, height and age. 
 - :toolbox: Compatible with machine learning, deep learning and reinforcement learning tools. 
