@@ -89,4 +89,4 @@ Below is the basic project structure:
 
 ## Acknowledgments
 
-We would like to thank the administrator of the OpenAPS data commons, Dana Lewis, for providing access to the repository and answering our questions about the contents of the repository. 
+We would like to thank the administrator of the OpenAPS data commons, Dana Lewis, for providing access to the repository and answering our questions about the contents. 
