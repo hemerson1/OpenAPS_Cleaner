@@ -4,22 +4,10 @@ OpenAPS Data Cleaner is a Python package for extracting log data from the OpenAP
 
 <table>
   <tr>
-    <td><img src="./images/Example_1.png" alt="Example blood glucose trajectory 1"></td>
-    <td><img src="./images/Example_2.png" alt="Example blood glucose trajectory 2"></td>
+    <td><img src="./images/Example_1.png" alt="Example blood glucose trajectory 1" width="50%"></td>
+    <td><img src="./images/Example_2.png" alt="Example blood glucose trajectory 2" width="50%"></td>
   </tr>
 </table>
-
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Installation](#installation)
-- [Usage](#usage)
-  - [Processing](#processing) 
-  - [Segmentation](#segmentation)
-- [Directory Structure](#directory-structure)
-- [Acknowledgments](#acknowledgments)
 
 ## Introduction
 
@@ -32,7 +20,7 @@ The code in this repository provides a complete workflow for extracting relevant
 Here is a detailed list of the dataset features
 
 - :hourglass: Over 18 combined years of diabetes data.
-- :drop_of_blood: Full glucose, carbohydrate and insulin information, including background basal insulin and combination boluses.
+- :drop_of_blood: Full blood glucose, carbohydrate and insulin information.
 - :runner: Binary labels of physical activity, fatty meals, high protein meals, alcohol and caffeine.
 - :white_haired_man: Participant demographic information, such as weight, height and age. 
 - :toolbox: Compatible with machine learning, deep learning and reinforcement learning tools. 
@@ -96,7 +84,7 @@ Below is the basic project structure:
 	|- main_segment.py	  (main segmentation function)
 	|- quant_proc.py	  (tools for processing quantitative metrics)
 	|- qual_proc.py		  (tools for processing qualitative self-reports)
-	|- visualise.py       (view the processed data)
+	|- visualise.py           (view the processed data)
 ```
 
 ## Acknowledgments
