@@ -4,8 +4,8 @@ OpenAPS Data Cleaner is a Python package for extracting log data from the OpenAP
 
 <table>
   <tr>
-    <td><img src="./images/Example_1.png" alt="Example blood glucose trajectory 1" width="50%"></td>
-    <td><img src="./images/Example_2.png" alt="Example blood glucose trajectory 2" width="50%"></td>
+    <td><img src="./images/Example_1.png" alt="Example blood glucose trajectory 1" width="100%"></td>
+    <td><img src="./images/Example_2.png" alt="Example blood glucose trajectory 2" width="100%"></td>
   </tr>
 </table>
 
