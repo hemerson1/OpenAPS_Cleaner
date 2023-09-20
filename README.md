@@ -1,6 +1,13 @@
 # OpenAPS Data Cleaner
 
-OpenAPS Data Cleaner is a Python package for extracting log data from the OpenAPS Data Commons repository and processing it for time-series analysis and machine learning applications. 
+OpenAPS Data Cleaner is a Python package for extracting log data from the OpenAPS Data Commons repository and processing it for time-series analysis and machine learning applications.
+
+<table>
+  <tr>
+    <td><img src="./images/Example_1.png" alt="Example blood glucose trajectory 1"></td>
+    <td><img src="./images/Example_3.png" alt="Example blood glucose trajectory 2"></td>
+  </tr>
+</table>
 
 ## Table of Contents
 
@@ -24,11 +31,11 @@ The code in this repository provides a complete workflow for extracting relevant
 
 Here is a detailed list of the dataset features
 
-- Over 18 combined years of diabetes data.
-- Full blood glucose, carbohydrate and insulin information, including background basal insulin and combination boluses.
-- Binary labels of physical activity, fatty meals, high protein meals, alcohol and caffeine.
-- Participant demographic information, such as weight, height and age. 
-- Compatible with machine learning, deep learning and reinforcement learning tools. 
+- :hourglass: Over 18 combined years of diabetes data.
+- :drop_of_blood: Full blood glucose, carbohydrate and insulin information, including background basal insulin and combination boluses.
+- :runner: Binary labels of physical activity, fatty meals, high protein meals, alcohol and caffeine.
+- :white_haired_man: Participant demographic information, such as weight, height and age. 
+- :toolbox: Compatible with machine learning, deep learning and reinforcement learning tools. 
 
 ## Getting Started
 
@@ -55,39 +62,43 @@ Processing the repository creates two dataframes, one containing the insulin, ca
 python cleaner/main_proc.py
 ```
 
-Only certain participants in the OpenAPS Data Commons have pump devices that log all the insulin doses delivered by their systems. The IDs of these participants are stored in ```pts.txt``` and selectively filtered when creating the dataset.
-
-Configuration information can be found in /configs
+Only certain participants in the OpenAPS Data Commons have pump devices that log all the insulin doses delivered by their systems. The IDs of these participants are stored in ```pts.txt``` and are selectively filtered when creating the dataset. Configuration information for dataset processing and segmentation can be found in ```/configs``` folders.
 
 
 ### Segmentation
 
-Segmentation combines the processed data and breaks it into continuous segments for machine learning tasks. This function can be run from the root folder using:
+Segmentation combines the processed data and breaks it into continuous segments for machine learning or reinforcement learning tasks. This function can be run from the root folder using:
 ```
 python cleaner/main_segment.py
 ```
 
-The function outputs two dictionaries with the keys "observations", "actions", "terminals" and "rewards". These correspond to the features of a Markov decision process and can be used for reinforcement learning tasks. The rewards and state representations are determined by functions described in ```feature_rep.py``` and can be readily modified for new representations. To use the data for blood glucose forecasting, the "observations" metric represents a continuous sequence of blood glucose, insulin and carbohydrate information.
+The function outputs two dictionaries with keys corresponding to the features of a Markov decision process:
+- "observations" - the participant's blood glucose, insulin and carbydrates
+- "actions" - insulin dosing actions of the participant's blood glucose controller
+- "rewards" - how positive a given state or action is for a participant's health
+- "terminals" - whether the actions of the controller result in patient hospitalisation
 
-Second dictionary contains unprocessed state information
+The "rewards" and "observations" representations are determined by functions described in ```feature_rep.py``` and can be readily modified to incorporate new information. To use the data for time-series prediction, the "observations" metric represents a continuous sequence and therefore can be used as both an input and target for blood glucose forecasting. The second dictionary output by the model represents the "observations" without processing.
 
 ## Directory Structure
 
 Below is the basic project structure:
 
 ```
-|- config/                 (default configurations for processing & segmentation)
-|- datasets/ 
+|- config/                (default configurations for processing & segmentation)
+|- datasets/    
+|- images/          
 |- cleaner/ 
 	|- demographic.py	  (processing of patient demographic info)
 	|- feature_rep.py	  (representation of model features)
-	|- helper.py			  (general support functions)
+	|- helper.py		  (general support functions)
 	|- main_proc.py		  (main processing function)
 	|- main_segment.py	  (main segmentation function)
-	|- quant_proc.py		  (tools for processing quantitative metrics)
+	|- quant_proc.py	  (tools for processing quantitative metrics)
 	|- qual_proc.py		  (tools for processing qualitative self-reports)
+	|- visualise.py       (view the processed data)
 ```
 
 ## Acknowledgments
 
-Acknowledge any individuals, libraries, or resources that have 
+We would like to thank the administrator of the OpenAPS data commons, Dana Lewis, for providing access to the repository and answering our questions about the contents of the repository. 
