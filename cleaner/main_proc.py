@@ -35,7 +35,7 @@ def extract_user_files(full_path):
     # list all files in folder and trim to distinct name format
     full_filenames = [f for f in os.listdir(full_path) if os.path.isfile(os.path.join(full_path, f))]
     full_filenames = [f for f in full_filenames if f.endswith(".json")]
-    filenames = [re.split('_|\.', f)[0] for f in full_filenames]
+    filenames = [re.split('_|\.', f)[1] for f in full_filenames]
             
     # get file name and number if there are multiple files
     file_keys = list(Counter(filenames).keys()) 
@@ -192,6 +192,11 @@ def collect_cohort(
     
     # save the dataframe
     if save_path is not None:
+        # Create the directory if it does not exist
+        dir_path = save_path.split('/')[:-1]
+        dir_path = "/".join(dir_path)
+        os.makedirs(dir_path, exist_ok=True)
+
         with open(save_path + ".pkl", 'wb') as f:
             pickle.dump(full_dataset, f, protocol=pickle.HIGHEST_PROTOCOL)
         with open(save_path +"_events" + ".pkl", 'wb') as f:
